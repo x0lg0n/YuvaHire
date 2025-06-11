@@ -1,0 +1,46 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.info
+
+# Directory for instrumented libs/deps
+/coverage
+
+# Node.js dependencies
+/node_modules
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Compiled output
+/dist
+/build
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS generated files
+.DS_Store
+.Trashes
+thumbs.db
+
+# pnpm-lock.yaml
+pnpm-lock.yaml
