@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
-import { register as registerUser } from "@/lib/api"
+import { register as registerUser, getAllColleges } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 
@@ -40,7 +40,7 @@ const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["student", "college_admin"]),
-  college_name: z.string().min(2, "College name must be at least 2 characters").optional(),
+  college_name: z.string().min(2, "College name is required"),
 })
 
 export default function RegisterPage() {
@@ -48,6 +48,22 @@ export default function RegisterPage() {
   const { login } = useAuth()
   const [error, setError] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
+  const [colleges, setColleges] = React.useState([])
+  const [loadingColleges, setLoadingColleges] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const response = await getAllColleges()
+        setColleges(response.data.colleges)
+      } catch (err) {
+        console.error("Failed to load colleges:", err)
+      } finally {
+        setLoadingColleges(false)
+      }
+    }
+    fetchColleges()
+  }, [])
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -58,16 +74,12 @@ export default function RegisterPage() {
       college_name: "",
     },
   })
-
   const onSubmit = async (values) => {
       setError("")
       setIsLoading(true)
       try {
-        const dataToSend = values.role === "college_admin" 
-          ? { username: values.username, password: values.password, role: values.role }
-          : values;
-        const response = await registerUser(dataToSend)
-        login(response.data.user, response.data.token)
+        const response = await registerUser(values)
+        await login(response.data)
         router.push(values.role === "student" ? "/student/jobs" : "/admin/jobs")
       } catch (err) {
         setError(err.message)
@@ -145,22 +157,34 @@ export default function RegisterPage() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-              {role === "student" && (
-                <FormField
-                  control={form.control}
-                  name="college_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>College Name</FormLabel>
+              />              <FormField
+                control={form.control}
+                name="college_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>College {role === "student" ? "Name" : "to Manage"}</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value}
+                      disabled={loadingColleges}
+                    >
                       <FormControl>
-                        <Input placeholder="Enter your college name" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder={loadingColleges ? "Loading colleges..." : "Select a college"} />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+                      <SelectContent>
+                        {colleges.map((college) => (
+                          <SelectItem key={college._id} value={college.name}>
+                            {college.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>

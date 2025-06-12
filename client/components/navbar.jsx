@@ -7,23 +7,20 @@ import { UserCircle } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu"
 
 export function Navbar() {
   const router = useRouter()
-  const [user, setUser] = React.useState(null)
-
-  React.useEffect(() => {
-    // Get user from localStorage
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
-    }
-  }, [])
+  const { user, logout } = useAuth()
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
-    localStorage.removeItem("token")
-    setUser(null)
+    logout()
     router.push("/login")
   }
 
@@ -38,15 +35,32 @@ export function Navbar() {
           <ThemeToggle />
           
           {user ? (
-            <>
-              <Link href={user.role === "student" ? "/student/jobs" : "/admin/jobs"}>
-                <Button variant="ghost">Dashboard</Button>
-              </Link>
-              <Button variant="ghost" onClick={handleLogout}>
-                Logout
-              </Button>
-              <UserCircle className="h-8 w-8" />
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="relative h-8 w-8 rounded-full"
+                >
+                  <UserCircle className="h-8 w-8" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link 
+                    href={user.role === "student" ? "/student/jobs" : "/admin/jobs"}
+                    className="cursor-pointer w-full"
+                  >
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Link href="/login">

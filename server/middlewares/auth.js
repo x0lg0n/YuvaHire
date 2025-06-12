@@ -15,7 +15,14 @@ const authMiddleware = (req, res, next) => {
       return res.status(401).json({ message: 'Token has expired' });
     }
     
-    req.user = decoded;
+    // Set user info in request object
+    req.user = {
+      id: decoded.id,
+      userId: decoded.id, // Add userId for compatibility
+      username: decoded.username,
+      role: decoded.role,
+      college_name: decoded.college_name
+    };
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -25,9 +32,17 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-const requireRole = (role) => {
+const requireRole = (roles) => {
   return (req, res, next) => {
-    if (req.user.role !== role) {
+    // Convert single role to array for uniform handling
+    const allowedRoles = Array.isArray(roles) ? roles : [roles];
+    
+    // Super admin has access to everything
+    if (req.user.role === 'super_admin') {
+      return next();
+    }
+    
+    if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ message: 'Access denied. Insufficient permissions.' });
     }
     next();

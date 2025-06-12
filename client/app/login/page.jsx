@@ -47,12 +47,11 @@ export default function LoginPage() {
       password: "",
     },
   })
+
   const onSubmit = async (values) => {
+    setError("")
+    setIsLoading(true)
     try {
-      console.log('Login attempt with:', { username: values.username })
-      setError("")
-      setIsLoading(true)
-      
       const { data } = await loginApi(values)
       console.log('Login response:', data)
       
@@ -60,8 +59,8 @@ export default function LoginPage() {
         throw new Error('Invalid server response')
       }
       
-      console.log('User role:', data.user.role)
       await authLogin(data)
+      console.log('Successfully logged in as:', data.user.role)
       
       // Redirect based on role
       if (data.user.role === 'student') {

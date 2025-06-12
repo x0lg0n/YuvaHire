@@ -7,18 +7,21 @@ import { useEffect } from "react"
 export function ProtectedRoute({ children, requiredRole }) {
   const { user, loading } = useAuth()
   const router = useRouter()
-
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push("/login")      } else if (requiredRole && user.role !== requiredRole) {
-        router.push(
-          user.role === "student" 
-            ? "/student/jobs" 
-            : user.role === "college_admin" 
-              ? "/admin/jobs"
-              : "/login"
-        )
+        router.push("/login")
+      } else if (requiredRole) {
+        const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+        if (!allowedRoles.includes(user.role)) {
+          router.push(
+            user.role === "student" 
+              ? "/student/jobs" 
+              : user.role === "college_admin" 
+                ? "/admin/jobs"
+                : "/login"
+          )
+        }
       }
     }
   }, [user, loading, router, requiredRole])
@@ -31,8 +34,11 @@ export function ProtectedRoute({ children, requiredRole }) {
     )
   }
 
-  if (!user || (requiredRole && user.role !== requiredRole)) {
-    return null
+  if (!user) return null
+  
+  if (requiredRole) {
+    const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    if (!allowedRoles.includes(user.role)) return null
   }
 
   return children

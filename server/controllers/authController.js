@@ -4,7 +4,7 @@ const User = require('../models/User');
 
 const register = async (req, res) => {
   try {
-    const { username, password, role, college_name } = req.body;
+    const { username, password, role, college_name, superAdminToken } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ message: 'Username and password are required' });
@@ -16,6 +16,17 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Special handling for super_admin registration
+    if (role === 'super_admin') {
+      const expectedToken = process.env.SUPER_ADMIN_TOKEN;
+      if (!expectedToken || superAdminToken !== expectedToken) {
+        return res.status(403).json({ message: 'Invalid super admin token' });
+      }
+    } else if (!college_name) {
+      // College name is required for non-super-admin users
+      return res.status(400).json({ message: 'College name is required' });
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -24,10 +35,10 @@ const register = async (req, res) => {
       username,
       password: hashedPassword,
       role: role || 'student',
-      college_name: role === 'student' ? college_name : null
+      college_name: role === 'super_admin' ? null : college_name
     });
 
-    // Generate JWT token for automatic login after registration
+    // Generate JWT token
     const token = jwt.sign(
       { 
         id: user.id, 

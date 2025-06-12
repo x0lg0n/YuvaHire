@@ -2,7 +2,7 @@ const Job = require('../models/Job');
 
 const createJob = async (req, res) => {
   try {
-    const { title, description, location, salary, type, requirements } = req.body;
+    const { title, description, location, salary, type, requirements, deadline } = req.body;
     const college_name = req.user.college_name;
 
     const job = await Job.create({
@@ -12,7 +12,8 @@ const createJob = async (req, res) => {
       salary,
       type,
       requirements,
-      college_name
+      college_name,
+      deadline
     });
 
     res.status(201).json({
@@ -27,9 +28,13 @@ const createJob = async (req, res) => {
 
 const getJobsByCollege = async (req, res) => {
   try {
-    const { college_name } = req.params;
-    const jobs = await Job.find({ college_name });
+    const { college_name } = req.user;
+    
+    if (!college_name) {
+      return res.status(400).json({ message: 'No college associated with user' });
+    }
 
+    const jobs = await Job.find({ college_name }).sort('-createdAt');
     res.json({ jobs });
   } catch (error) {
     console.error(error);
@@ -39,9 +44,13 @@ const getJobsByCollege = async (req, res) => {
 
 const getMyPostedJobs = async (req, res) => {
   try {
-    const college_id = req.user.college_id;
-    const jobs = await Job.findByCollegeId(college_id);
+    const { college_name } = req.user;
+    
+    if (!college_name) {
+      return res.status(400).json({ message: 'No college associated with user' });
+    }
 
+    const jobs = await Job.find({ college_name }).sort('-createdAt');
     res.json({ jobs });
   } catch (error) {
     console.error(error);

@@ -12,19 +12,21 @@ export default function StudentJobsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         const [jobsResponse, applicationsResponse] = await Promise.all([
           getJobs(),
           getMyApplications()
-        ])
-        setJobs(jobsResponse.data)
-        setApplications(applicationsResponse.data)
+        ]);
+        setJobs(jobsResponse.data.jobs || []);
+        setApplications(applicationsResponse.data.applications || []);
       } catch (err) {
+        console.error('Error fetching data:', err);
         setError(err.response?.data?.message || "Failed to fetch jobs")
+        setJobs([])
+        setApplications([])
       } finally {
         setLoading(false)
       }

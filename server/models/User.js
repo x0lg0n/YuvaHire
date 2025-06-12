@@ -12,13 +12,13 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'college_admin'],
+    enum: ['student', 'college_admin', 'super_admin'],
     default: 'student'
   },
   college_name: {
     type: String,
     required: function() {
-      return this.role === 'student';
+      return this.role !== 'super_admin';
     }
   }
 }, {

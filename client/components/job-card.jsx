@@ -19,17 +19,17 @@ export function JobCard({ job, onApply, hasApplied }) {
   const { user } = useAuth()
   const [applying, setApplying] = useState(false)
   const [error, setError] = useState("")
-
   const handleApply = async () => {
     try {
-      setApplying(true)
-      setError("")
-      await applyToJob({ job_id: job._id })
-      onApply && onApply(job._id)
+      setApplying(true);
+      setError("");
+      await applyToJob({ jobId: job._id });
+      onApply && onApply(job._id);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to apply")
+      console.error('Error applying to job:', err);
+      setError(err.response?.data?.message || "Failed to apply");
     } finally {
-      setApplying(false)
+      setApplying(false);
     }
   }
 

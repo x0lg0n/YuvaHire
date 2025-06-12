@@ -39,7 +39,7 @@ const getMyApplications = async (req, res) => {
   try {
     const studentId = req.user.userId;
     const applications = await Application.find({ student: studentId })
-      .populate('job', 'title description location')
+      .populate('job', 'title description location college_name salary type')
       .populate('student', 'username')
       .sort('-createdAt');
 

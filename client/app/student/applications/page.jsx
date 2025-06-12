@@ -24,20 +24,21 @@ export default function StudentApplicationsPage() {
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        setLoading(true)
-        const response = await getMyApplications()
-        setApplications(response.data)
+        setLoading(true);
+        const response = await getMyApplications();
+        setApplications(response.data.applications || []);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch applications")
+        console.error('Error fetching applications:', err);
+        setError(err.response?.data?.message || "Failed to fetch applications");
+        setApplications([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchApplications()
+    };
+    fetchApplications();
   }, [])
 
   if (loading) {
@@ -59,8 +60,7 @@ export default function StudentApplicationsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">My Applications</h1>
-      
-      {applications.length === 0 ? (
+        {Array.isArray(applications) && applications.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           You haven't applied to any jobs yet.
         </div>

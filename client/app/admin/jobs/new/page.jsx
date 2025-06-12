@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { createJob } from "@/lib/api"
+import { useAuth } from "@/lib/auth-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -35,8 +37,15 @@ const formSchema = z.object({
 
 export default function PostJobPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  // Redirect if not logged in as college admin
+  if (!user || user.role !== "college_admin") {
+    router.push("/login")
+    return null
+  }
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -49,19 +58,26 @@ export default function PostJobPage() {
       type: "Full-time",
     },
   })
+
   const onSubmit = async (values) => {
     try {
       setLoading(true)
       setError("")
-      // Get the current user's college name from localStorage
-      const user = JSON.parse(localStorage.getItem("user"))
+      
+      // Add deadline as one month from now
+      const deadline = new Date()
+      deadline.setMonth(deadline.getMonth() + 1)
+      
       const jobData = {
         ...values,
-        college_name: user.college_name
+        deadline: deadline.toISOString(),
+        college_name: user.college_name // Use the admin's associated college
       }
+      
       await createJob(jobData)
       router.push("/admin/jobs")
     } catch (err) {
+      console.error('Error creating job:', err)
       setError(err.response?.data?.message || "Failed to create job")
     } finally {
       setLoading(false)
@@ -71,6 +87,11 @@ export default function PostJobPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Post a New Job</h1>
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="space-y-6">
         <Form {...form}>
