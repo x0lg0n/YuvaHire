@@ -1,140 +1,152 @@
-# YuvaHire - Modern College Job Portal
+# YuvaHire
 
-![YuvaHire Logo](client/public/globe.svg)
+<div align="center">
+  <img src="client/public/globe.svg" alt="YuvaHire Logo" width="120" />
+  
+  ### Modern College Job Portal
+  
+  [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](package.json)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-%3E%3D5.0-green)](server/README.md)
+</div>
 
-YuvaHire is a modern, full-stack job portal application designed to bridge the gap between college students and employment opportunities. It provides a streamlined platform for colleges to post jobs and for students to find and apply for positions that match their skills and interests.
+---
 
-## 🌟 Features
+YuvaHire is a production-ready job portal platform designed to revolutionize how colleges connect their students with employment opportunities. Built with modern technologies and best practices, it provides a seamless experience for both students and college administrators.
+
+## ✨ Key Features
 
 ### For Students
-- **Smart Job Discovery**: Find relevant jobs from your college
-- **Easy Application Process**: Apply to multiple jobs with a single profile
-- **Application Tracking**: Monitor your application status in real-time
-- **Personalized Dashboard**: View and manage all your applications
-- **Advanced Search**: Filter jobs by type, location, and salary range
+
+* Smart Job Discovery with AI-powered recommendations
+* One-click application process with profile management
+* Real-time application status tracking
+* Personalized dashboard with job matches
+* Advanced search with multiple filters
 
 ### For College Administrators
-- **Efficient Job Posting**: Create and manage job listings
-- **Application Management**: Review and process student applications
-- **Analytics Dashboard**: Track application statistics and trends
-- **Candidate Management**: Evaluate and communicate with applicants
-- **Multi-format Job Listings**: Support for full-time, part-time, and internship positions
 
-## 🚀 Tech Stack
+* Efficient job posting and management system
+* Comprehensive application tracking dashboard
+* Advanced analytics and reporting
+* Automated candidate communication
+* Multi-format job listing support
+
+## 🚀 Technology Stack
 
 ### Frontend
-- **Framework**: Next.js 15 with React 19
-- **Styling**: TailwindCSS with customizable themes
-- **State Management**: React Context API
-- **Form Handling**: React Hook Form with Zod validation
-- **UI Components**: Radix UI primitives with custom styling
+
+* Next.js 15 with React 19
+* TailwindCSS with custom theming
+* React Context for state management
+* React Hook Form with Zod validation
+* Radix UI primitives
 
 ### Backend
-- **Runtime**: Node.js with Express.js
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT with role-based access control
-- **API Documentation**: OpenAPI/Swagger
-- **Security**: CORS, Helmet, Rate Limiting
 
-## 🛠️ Installation
+* Node.js with Express
+* MongoDB with Mongoose ODM
+* JWT authentication
+* OpenAPI/Swagger documentation
+* Enterprise-grade security
+
+## 📦 Quick Start
 
 ### Prerequisites
-- Node.js 18.0 or higher
-- MongoDB 5.0 or higher
-- pnpm package manager
 
-### Frontend Setup
-```bash
-# Navigate to client directory
-cd client
+* Node.js (>= 18.0.0)
+* MongoDB (>= 5.0)
+* pnpm package manager
 
-# Install dependencies
-pnpm install
+### Development Setup
 
-# Create .env.local file
-cp .env.example .env.local
+1. Clone the repository
 
-# Start development server
-pnpm dev
-```
+   ```bash
+   git clone https://github.com/yourusername/yuvahire.git
+   cd yuvahire
+   ```
 
-### Backend Setup
-```bash
-# Navigate to server directory
-cd server
+2. Install dependencies
 
-# Install dependencies
-pnpm install
+   ```bash
+   # Frontend
+   cd client
+   pnpm install
 
-# Create .env file
-cp .env.example .env
+   # Backend
+   cd ../server
+   pnpm install
+   ```
 
-# Start development server
-pnpm dev
-```
+3. Configure environment
 
-## 🔧 Configuration
+   ```bash
+   # Frontend (.env.local)
+   NEXT_PUBLIC_API_URL=http://localhost:5000/api
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-### Environment Variables
+   # Backend (.env)
+   PORT=5000
+   MONGODB_URI=mongodb://localhost:27017/yuvahire
+   JWT_SECRET=your_secure_secret
+   NODE_ENV=development
+   ```
 
-#### Frontend (.env.local)
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+4. Start development servers
 
-#### Backend (.env)
-```env
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-NODE_ENV=development
-```
+   ```bash
+   # Terminal 1 (Frontend)
+   cd client
+   pnpm dev
 
-## 📚 API Documentation
+   # Terminal 2 (Backend)
+   cd server
+   pnpm dev
+   ```
 
-The API is RESTful and uses standard HTTP methods. Full documentation is available at `/api/docs` when running the server.
+## 🔍 Documentation
 
-### Core Endpoints
+* [Frontend Documentation](client/README.md)
+* [Backend Documentation](server/README.md)
+* [Contributing Guide](CONTRIBUTING.md)
+* [API Documentation](server/README.md#api-routes)
 
-- **Authentication**: `/api/auth/*`
-- **Jobs**: `/api/jobs/*`
-- **Applications**: `/api/applications/*`
-- **Colleges**: `/api/colleges/*`
-- **Users**: `/api/users/*`
+## 🔐 Security Features
 
-## 🔐 Security
+* JWT-based authentication
+* Role-based access control
+* Rate limiting and CORS
+* Input validation
+* XSS protection
+* Security headers
 
-- JWT-based authentication
-- Role-based access control
-- Request rate limiting
-- Security headers (CORS, XSS Protection, etc.)
-- Input validation and sanitization
-- Secure password hashing
+## 📈 Roadmap
+
+* AI-powered job matching
+* Resume parsing and analysis
+* Interview scheduling system
+* Mobile applications
+* Analytics dashboard
+* Integration with job boards
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 💬 Support
 
-- All the contributors who have helped shape YuvaHire
-- The open-source community for the amazing tools and libraries
-- College administrators and students for valuable feedback
-
-## 📬 Contact
-
-For support or queries, please open an issue or contact us at [GitHub Issues](https://github.com/yourusername/YuvaHire/issues).
+* [GitHub Issues](https://github.com/yourusername/yuvahire/issues)
+* [Documentation](https://yuvahire.com/docs)
+* [Community Discord](https://discord.gg/yuvahire)
 
 ---
+
+<div align="center">
 Made with ❤️ for the student community
+</div>

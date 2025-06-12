@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# YuvaHire Frontend
 
-## Getting Started
+This is the frontend application for YuvaHire, built with Next.js 15 and React 19.
 
-First, run the development server:
+## 🚀 Quick Start
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Prerequisites
+
+- Node.js v18.0 or higher
+- pnpm package manager
+- Backend server running (see ../server/README.md)
+
+### Installation
+
+1. **Install dependencies**
+
+   ```bash
+   pnpm install
+   ```
+
+2. **Environment Setup**
+
+   ```bash
+   # Copy example environment file
+   cp .env.example .env.local
+
+   # Configure environment variables in .env.local:
+   NEXT_PUBLIC_API_URL=http://localhost:5000/api
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   ```
+
+3. **Start Development Server**
+
+   ```bash
+   pnpm dev
+   ```
+
+## 📁 Project Structure
+
+```
+client/
+├── app/                    # Next.js app directory
+│   ├── admin/             # Admin dashboard pages
+│   ├── student/           # Student dashboard pages
+│   ├── login/             # Authentication pages
+│   └── register/          # Registration pages
+├── components/            # Reusable components
+│   ├── ui/               # UI component library
+│   └── ...               # Other components
+├── lib/                   # Utilities and helpers
+└── public/               # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔧 Available Scripts
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
+- `pnpm format` - Format code with Prettier
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎨 UI Components
 
-## Learn More
+We use a custom UI component library built with:
+- Radix UI primitives
+- TailwindCSS
+- Shadcn UI
 
-To learn more about Next.js, take a look at the following resources:
+### Component Usage Example
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```jsx
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+export default function MyComponent() {
+  return (
+    <div>
+      <Input placeholder="Enter text" />
+      <Button>Click me</Button>
+    </div>
+  )
+}
+```
 
-## Deploy on Vercel
+## 🔐 Authentication
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Authentication is handled through JWT tokens and managed with React Context. Protected routes are implemented using the `protected-route` component.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📱 Responsive Design
+
+The application is fully responsive and follows a mobile-first approach using TailwindCSS breakpoints.
+
+## 🌐 API Integration
+
+API calls are managed through a centralized `api.js` utility using Axios.
+
+## 🌈 Theming
+
+Supports light/dark mode and custom color themes through TailwindCSS configuration.
