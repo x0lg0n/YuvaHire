@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getMyPostedJobs } from "@/lib/api"
+import { getMyPostedJobs, getJobApplications, updateApplicationStatus } from "@/lib/api"
 import {
   Table,
   TableBody,
@@ -23,26 +23,65 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UserCircle } from "lucide-react"
 
 export default function AdminApplicationsPage() {
-  const [jobs, setJobs] = useState([])
+  const [allApplications, setAllApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [updateLoading, setUpdateLoading] = useState(false)
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true)
-        const response = await getMyPostedJobs()
-        console.log('Jobs response:', response.data)
-        setJobs(response.data.jobs || [])
+    const fetchApplications = async () => {
+      try {        setLoading(true)
+        // First get all jobs posted by this admin
+        const jobsResponse = await getMyPostedJobs()
+        const jobs = jobsResponse.jobs || []
+        
+        // Then get applications for each job
+        const applicationsPromises = jobs.map(job => getJobApplications(job._id))
+        const applicationsResponses = await Promise.all(applicationsPromises)
+        
+        // Combine all applications
+        const allApps = applicationsResponses.flatMap(response => response.applications || [])
+        setAllApplications(allApps)
       } catch (err) {
-        console.error('Error fetching jobs:', err)
+        console.error('Error fetching applications:', err)
         setError(err.response?.data?.message || "Failed to fetch applications")
       } finally {
         setLoading(false)
       }
     }
-    fetchJobs()
+    fetchApplications()
   }, [])
+
+  const handleStatusUpdate = async (applicationId, newStatus) => {
+    try {
+      setUpdateLoading(true)
+      await updateApplicationStatus(applicationId, newStatus)
+      setAllApplications(prevApps => 
+        prevApps.map(app => 
+          app._id === applicationId 
+            ? { ...app, status: newStatus }
+            : app
+        )
+      )
+    } catch (err) {
+      console.error('Error updating application status:', err)
+      setError('Failed to update application status')
+    } finally {
+      setUpdateLoading(false)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch (e) {
+      return 'Invalid date'
+    }
+  }
 
   if (loading) {
     return (
@@ -63,40 +102,11 @@ export default function AdminApplicationsPage() {
     )
   }
 
-  const allApplications = (Array.isArray(jobs) ? jobs : []).reduce((acc, job) => {
-    if (job.applications && Array.isArray(job.applications)) {
-      const jobApplications = job.applications.map(app => ({
-        ...app,
-        job: {
-          id: job._id,
-          title: job.title,
-          type: job.type,
-          location: job.location,
-          salary: job.salary
-        }
-      }))
-      return [...acc, ...jobApplications]
-    }
-    return acc
-  }, [])
-
-  const formatDate = (dateString) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
-    } catch (e) {
-      return 'Invalid date'
-    }
-  }
-
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Job Applications</h1>
-
-      {!allApplications.length ? (
+      
+      {allApplications.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           No applications received yet.
         </div>
@@ -108,17 +118,18 @@ export default function AdminApplicationsPage() {
                 <TableHead>Applicant</TableHead>
                 <TableHead>Job Title</TableHead>
                 <TableHead>Applied On</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
+                <TableHead>Current Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {allApplications.map((application) => (
-                <TableRow key={application._id}>
-                  <TableCell className="flex items-center space-x-2">
-                    <UserCircle className="h-8 w-8" />
-                    <div>
-                      <div className="font-medium">{application.student?.username}</div>
+            <TableBody>{allApplications.map((application) => (<TableRow key={application._id}><TableCell>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/10">
+                        <UserCircle className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <div className="font-medium">{application.student?.username}</div>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -138,49 +149,73 @@ export default function AdminApplicationsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Application Details</DialogTitle>
-                          <DialogDescription>
-                            Submitted on {formatDate(application.createdAt)}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <h4 className="font-medium">Applicant</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {application.student?.username}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium">Status</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium">Job</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {application.job.title}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium">Salary</h4>
-                              <p className="text-sm text-muted-foreground">
-                                ₹{(application.job.salary || 0).toLocaleString()}/year
-                              </p>
+                    <div className="flex gap-2">
+                      {application.status === "pending" && (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-green-100 hover:bg-green-200"
+                            onClick={() => handleStatusUpdate(application._id, "accepted")}
+                            disabled={updateLoading}
+                          >
+                            Accept
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="bg-red-100 hover:bg-red-200"
+                            onClick={() => handleStatusUpdate(application._id, "rejected")}
+                            disabled={updateLoading}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Application Details</DialogTitle>
+                            <DialogDescription>
+                              Submitted on {formatDate(application.createdAt)}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <h4 className="font-medium">Applicant</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {application.student?.username}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Status</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Job</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {application.job.title}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Location</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {application.job.location}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

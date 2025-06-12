@@ -31,11 +31,10 @@ export default function AdminJobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      try {
-        setLoading(true)
+      try {        setLoading(true)
         const response = await getMyPostedJobs()
-        console.log('Jobs response:', response.data)
-        setJobs(response.data.jobs || [])
+        console.log('Jobs response:', response)
+        setJobs(response.jobs || [])
       } catch (err) {
         console.error('Error fetching jobs:', err)
         setError(err.response?.data?.message || "Failed to fetch jobs")

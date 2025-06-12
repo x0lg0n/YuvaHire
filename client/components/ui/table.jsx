@@ -30,16 +30,8 @@ function TableHeader({
   );
 }
 
-function TableBody({
-  className,
-  ...props
-}) {
-  return (
-    <tbody
-      data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
-      {...props} />
-  );
+function TableBody({className,...props}) {
+  return (<tbody data-slot="table-body" className={cn("[&_tr:last-child]:border-0", className)} {...props}/>);
 }
 
 function TableFooter({
@@ -54,18 +46,9 @@ function TableFooter({
   );
 }
 
-function TableRow({
-  className,
-  ...props
-}) {
+function TableRow({className,...props}) {
   return (
-    <tr
-      data-slot="table-row"
-      className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
-        className
-      )}
-      {...props} />
+    <tr data-slot="table-row" className={cn("hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",className)} {...props}/>
   );
 }
 

@@ -51,21 +51,20 @@ export default function LoginPage() {
   const onSubmit = async (values) => {
     setError("")
     setIsLoading(true)
-    try {
-      const { data } = await loginApi(values)
-      console.log('Login response:', data)
+    try {      const response = await loginApi(values)
+      console.log('Login response:', response)
       
-      if (!data.token || !data.user) {
+      if (!response.token || !response.user) {
         throw new Error('Invalid server response')
       }
       
-      await authLogin(data)
-      console.log('Successfully logged in as:', data.user.role)
+      await authLogin(response)
+      console.log('Successfully logged in as:', response.user.role)
       
       // Redirect based on role
-      if (data.user.role === 'student') {
+      if (response.user.role === 'student') {
         router.push('/student/jobs')
-      } else if (data.user.role === 'college_admin') {
+      } else if (response.user.role === 'college_admin') {
         router.push('/admin/jobs')
       } else {
         throw new Error('Invalid user role')

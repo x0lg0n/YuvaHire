@@ -15,28 +15,43 @@ api.interceptors.request.use((config) => {
 
 // Add response interceptor for consistent error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   (error) => {
-    // Get error message from response or fallback
-    const message = error.response?.data?.message || 
-                   "Something went wrong. Please try again."
-    error.message = message
-    
-    // Handle unauthorized errors (token expired or invalid)
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("user")
-      window.location.href = "/login"
-    }
-    
+    // Log detailed error information
     console.error('API Error:', {
       status: error.response?.status,
-      message: error.message,
+      message: error.response?.data?.message || error.message,
       path: error.config?.url,
-      method: error.config?.method
+      method: error.config?.method,
+      data: error.response?.data
     });
     
-    return Promise.reject(error)
+    // Handle different error scenarios
+    if (error.response) {
+      // Server responded with error status
+      if (error.response.status === 401) {
+        // Unauthorized - clear auth state and redirect
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        if (typeof window !== 'undefined') {
+          window.location.href = "/login";
+        }
+      } else if (error.response.status === 403) {
+        error.message = "You don't have permission to perform this action";
+      } else if (error.response.status === 404) {
+        error.message = "The requested resource was not found";
+      } else {
+        error.message = error.response.data?.message || "An error occurred while processing your request";
+      }
+    } else if (error.request) {
+      // Request made but no response received (network error)
+      error.message = "Unable to connect to the server. Please check your internet connection";
+    } else {
+      // Error in request setup
+      error.message = "An error occurred while setting up the request";
+    }
+    
+    return Promise.reject(error);
   }
 )
 
@@ -54,6 +69,7 @@ export const register = (data) => {
   }
   return api.post("/auth/register", transformedData)
 }
+
 export const login = (credentials) => {
   return api.post("/auth/login", credentials)
 }
@@ -66,11 +82,7 @@ export const getMyPostedJobs = () => api.get("/jobs/my-posted")
 // Applications
 export const applyToJob = (data) => api.post("/applications", data)
 export const getMyApplications = () => api.get("/applications/my-applications")
-
-// Colleges
-export const getAllColleges = () => api.get("/colleges")
-export const createCollege = (data) => api.post("/colleges", data)
-export const updateCollege = (id, data) => api.put(`/colleges/${id}`, data)
-export const deleteCollege = (id) => api.delete(`/colleges/${id}`)
+export const getJobApplications = (jobId) => api.get(`/applications/job/${jobId}`)
+export const updateApplicationStatus = (applicationId, status) => api.put(`/applications/${applicationId}/status`, { status })
 
 export default api

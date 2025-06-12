@@ -35,13 +35,13 @@ export function Navbar() {
           <ThemeToggle />
           
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <DropdownMenu>              <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="relative h-8 w-8 rounded-full"
+                  size="icon"
+                  className="relative h-10 w-10 rounded-full"
                 >
-                  <UserCircle className="h-8 w-8" />
+                  <UserCircle className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

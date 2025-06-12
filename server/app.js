@@ -54,16 +54,28 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  // Log detailed error information
   console.error('Server error:', {
     message: err.message,
     stack: err.stack,
     path: req.path,
-    method: req.method
+    method: req.method,
+    body: req.body,
+    query: req.query,
+    params: req.params
   });
   
+  // Don't expose stack trace in production
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   res.status(err.status || 500).json({ 
-    message: err.message || 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    error: {
+      message: err.message || 'Internal server error',
+      status: err.status || 500,
+      ...(isProduction ? {} : { stack: err.stack }),
+      path: req.path,
+      timestamp: new Date().toISOString()
+    }
   });
 });
 
