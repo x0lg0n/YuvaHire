@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: yuvahire-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: yuvahire
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./server/data/init:/docker-entrypoint-initdb.d
+    networks:
+      - yuvahire-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: yuvahire-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - yuvahire-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: yuvahire-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/yuvahire?authSource=admin
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - yuvahire-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: yuvahire-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:5000/api
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - yuvahire-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: yuvahire-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - yuvahire-network
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: yuvahire-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - yuvahire-network
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: yuvahire-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - yuvahire-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  yuvahire-network:
+    driver: bridge

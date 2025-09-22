@@ -25,6 +25,7 @@ import {
 import { createJob } from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { handleFormError } from "@/lib/utils"
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -58,13 +59,24 @@ export default function PostJobPage() {
       type: "Full-time",
     },
   })
-
   const onSubmit = async (values) => {
     try {
       setLoading(true)
       setError("")
       
-      // Add deadline as one month from now
+      // Check network connectivity before attempting to create job
+      try {
+        await fetch('/api/health', { 
+          method: 'HEAD',
+          cache: 'no-store', 
+          headers: { 'Cache-Control': 'no-cache' },
+          timeout: 3000
+        });
+      } catch (connErr) {
+        console.warn('Health check failed:', connErr);
+        // Continue anyway, the main request might still work
+      }
+        // Add deadline as one month from now
       const deadline = new Date()
       deadline.setMonth(deadline.getMonth() + 1)
       
@@ -77,10 +89,9 @@ export default function PostJobPage() {
       await createJob(jobData)
       router.push("/admin/jobs")
     } catch (err) {
-      console.error('Error creating job:', err)
-      setError(err.response?.data?.message || "Failed to create job")
-    } finally {
-      setLoading(false)
+      // Use our enhanced error handler
+      handleFormError(err, setError);
+    } finally {      setLoading(false)
     }
   }
 

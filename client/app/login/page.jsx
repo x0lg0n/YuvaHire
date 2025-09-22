@@ -28,6 +28,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth-context"
 import { login as loginApi } from "@/lib/api"
 import { Loader2 } from "lucide-react"
+import { AuthRedirect } from "@/components/auth-redirect"
+import { handleFormError } from "@/lib/utils"
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -43,42 +45,46 @@ export default function LoginPage() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      password: "",
+      username: "",      password: "",
     },
   })
-
-  const onSubmit = async (values) => {
+    const onSubmit = async (values) => {
     setError("")
     setIsLoading(true)
-    try {      const response = await loginApi(values)
-      console.log('Login response:', response)
+    try {      
+      console.log('Login attempt with:', { username: values.username });
       
-      if (!response.token || !response.user) {
-        throw new Error('Invalid server response')
+      // First check if the server is reachable
+      try {
+        await fetch('/api/health', { method: 'HEAD' });
+      } catch (connErr) {
+        console.error('Server connection check failed:', connErr);
+        throw new Error('Cannot connect to server. Please ensure the backend is running.');
       }
       
-      await authLogin(response)
-      console.log('Successfully logged in as:', response.user.role)
+      const response = await loginApi(values);
       
-      // Redirect based on role
-      if (response.user.role === 'student') {
-        router.push('/student/jobs')
-      } else if (response.user.role === 'college_admin') {
-        router.push('/admin/jobs')
-      } else {
-        throw new Error('Invalid user role')
+      console.log('Login response received:', response);
+      
+      if (!response || !response.token || !response.user) {
+        console.error('Invalid response format:', response);
+        throw new Error('Invalid server response format');
       }
+      
+      await authLogin(response);
+      console.log('Successfully logged in as:', response.user.role);
+      
+      // Redirect is now handled in the auth context
     } catch (err) {
-      console.error('Login error:', err)
-      setError(err.message || 'An error occurred during login')
+      // Use our enhanced error handler
+      handleFormError(err, setError);
     } finally {
       setIsLoading(false)
     }
   }
-
   return (
-    <div className="flex min-h-[80vh] items-center justify-center">
+    <AuthRedirect>
+      <div className="flex min-h-[80vh] items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login</CardTitle>
@@ -148,9 +154,9 @@ export default function LoginPage() {
             <Link href="/register" className="text-primary hover:underline">
               Register
             </Link>
-          </p>
-        </CardFooter>
+          </p>        </CardFooter>
       </Card>
     </div>
+    </AuthRedirect>
   )
 }

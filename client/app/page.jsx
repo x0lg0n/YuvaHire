@@ -1,9 +1,11 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { AuthRedirect } from "@/components/auth-redirect"
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+    <AuthRedirect>
+      <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
       <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
         Welcome to YuvaHire
       </h1>
@@ -74,12 +76,12 @@ export default function Home() {
               d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
             />
           </svg>
-          <h3 className="text-xl font-semibold">Easy to Use</h3>
-          <p className="mt-2 text-muted-foreground">
+          <h3 className="text-xl font-semibold">Easy to Use</h3>          <p className="mt-2 text-muted-foreground">
             Simple and intuitive interface for both students and college administrators
           </p>
         </div>
       </div>
     </div>
+    </AuthRedirect>
   )
 }

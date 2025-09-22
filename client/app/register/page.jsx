@@ -32,9 +32,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
-import { register as registerUser, getAllColleges } from "@/lib/api"
+import { register as registerUser } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import { AuthRedirect } from "@/components/auth-redirect"
+import { handleFormError } from "@/lib/utils"
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -48,50 +50,47 @@ export default function RegisterPage() {
   const { login } = useAuth()
   const [error, setError] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
-  const [colleges, setColleges] = React.useState([])
-  const [loadingColleges, setLoadingColleges] = React.useState(true)
-
-  React.useEffect(() => {
-    const fetchColleges = async () => {
-      try {
-        const response = await getAllColleges()
-        setColleges(response.data.colleges)
-      } catch (err) {
-        console.error("Failed to load colleges:", err)
-      } finally {
-        setLoadingColleges(false)
-      }
-    }
-    fetchColleges()
-  }, [])
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       password: "",
-      role: "student",
-      college_name: "",
+      role: "student",      college_name: "",
     },
   })
-  const onSubmit = async (values) => {
+    const onSubmit = async (values) => {
       setError("")
       setIsLoading(true)
       try {
+        // Check network connectivity before attempting registration
+        try {
+          await fetch('/api/health', { 
+            method: 'HEAD',
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' },
+            timeout: 3000
+          });
+        } catch (connErr) {
+          console.warn('Health check failed:', connErr);
+          // Continue anyway, the main request might still work
+        }
+        
         const response = await registerUser(values)
-        await login(response.data)
-        router.push(values.role === "student" ? "/student/jobs" : "/admin/jobs")
+        await login(response)
+        // Redirection is now handled in the auth context
       } catch (err) {
-        setError(err.message)
+        // Use our enhanced error handler
+        handleFormError(err, setError);
       } finally {
         setIsLoading(false)
       }
     }
 
   const role = form.watch("role")
-
   return (
-    <div className="flex min-h-[80vh] items-center justify-center">
+    <AuthRedirect>
+      <div className="flex min-h-[80vh] items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
@@ -163,24 +162,13 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>College {role === "student" ? "Name" : "to Manage"}</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value}
-                      disabled={loadingColleges}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={loadingColleges ? "Loading colleges..." : "Select a college"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {colleges.map((college) => (
-                          <SelectItem key={college._id} value={college.name}>
-                            {college.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter college name" 
+                        autoComplete="organization"
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -209,9 +197,9 @@ export default function RegisterPage() {
             <Link href="/login" className="text-primary hover:underline">
               Login
             </Link>
-          </p>
-        </CardFooter>
+          </p>        </CardFooter>
       </Card>
     </div>
+    </AuthRedirect>
   )
 }

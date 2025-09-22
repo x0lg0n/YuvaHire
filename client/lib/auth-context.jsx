@@ -43,12 +43,18 @@ export function AuthProvider({ children }) {
     
     setLoading(false)
   }, [])
-
   const login = async (data) => {
     try {
       console.log('Login data received:', data)
+      
+      // Defensive check for response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid login response: data is not an object')
+      }
+      
       if (!data.token || !data.user) {
-        throw new Error('Invalid login response format')
+        console.error('Invalid response structure:', data)
+        throw new Error('Invalid login response format: missing token or user')
       }
 
       console.log('Setting auth data:', { username: data.user.username, role: data.user.role })
@@ -60,6 +66,14 @@ export function AuthProvider({ children }) {
       setUser(data.user)
       
       console.log('Auth setup complete with role:', data.user.role)
+      
+      // Automatically redirect based on role
+      if (data.user.role === 'student') {
+        router.push('/student/home')
+      } else if (data.user.role === 'college_admin') {
+        router.push('/admin/jobs')
+      }
+      
       return true
     } catch (error) {
       console.error('Error in auth setup:', error)

@@ -1,5 +1,6 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
+const { isFallbackMode, getSampleData } = require('../config/database');
 
 const applyToJob = async (req, res) => {
   try {
@@ -9,8 +10,10 @@ const applyToJob = async (req, res) => {
       return res.status(400).json({ message: 'Job ID is required' });
     }
 
-    const studentId = req.user.userId;
+    // Fix: Use req.user.id instead of req.user.userId
+    const studentId = req.user.id || req.user.userId;
     if (!studentId) {
+      console.error('User authentication issue:', { user: req.user });
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
@@ -43,6 +46,9 @@ const applyToJob = async (req, res) => {
     console.error('Application submission error:', error);
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: 'Invalid application data' });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'You have already applied to this job' });
     }
     res.status(500).json({ message: 'Error submitting application. Please try again.' });
   }
@@ -140,24 +146,78 @@ const updateApplicationStatus = async (req, res) => {
 
 const getMyApplications = async (req, res) => {
   try {
+    // Check if we're in fallback mode
+    if (isFallbackMode()) {
+      console.log('Using fallback data for getMyApplications');
+      return res.json({
+        applications: getSampleData('applications'),
+        total: getSampleData('applications').length,
+        fallbackMode: true
+      });
+    }
+
     const studentId = req.user.userId;
     
     if (!studentId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(401).json({ 
+        message: 'User not authenticated',
+        details: { 
+          reason: 'missing_user_id',
+          authenticated: !!req.user
+        }
+      });
     }
 
-    const applications = await Application.find({ student: studentId })
-      .populate('job', 'title description location type college_name salary')
-      .populate('student', 'username email')
-      .sort('-createdAt');
+    // Add some logging to help diagnose connection issues
+    console.log(`Fetching applications for student: ${studentId}`);
+    
+    // Add timeout handling to prevent hanging requests
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database query timeout')), 5000);
+    });
+    
+    // Use Promise.race to implement a timeout
+    const applications = await Promise.race([
+      Application.find({ student: studentId })
+        .populate('job', 'title description location type college_name salary')
+        .populate('student', 'username email')
+        .sort('-createdAt'),
+      timeoutPromise
+    ]);
+    
+    console.log(`Found ${applications.length} applications for student ${studentId}`);
 
     res.json({ 
       applications,
-      total: applications.length
+      total: applications.length,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Error fetching student applications:', error);
-    res.status(500).json({ message: 'Error fetching your applications. Please try again.' });
+    
+    // If there's a database error, use fallback data
+    if (error.name === 'MongoError' || error.name === 'MongooseError' || error.message.includes('timeout')) {
+      console.log('Database error, switching to fallback data');
+      return res.json({
+        applications: getSampleData('applications'),
+        total: getSampleData('applications').length,
+        fallbackMode: true,
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+    
+    const statusCode = error.message.includes('timeout') ? 504 : 500;
+    const errorMessage = error.message.includes('timeout') 
+      ? 'Database query timed out. Please try again.' 
+      : 'Error fetching your applications. Please try again.';
+    
+    res.status(statusCode).json({ 
+      message: errorMessage,
+      details: process.env.NODE_ENV !== 'production' ? {
+        error: error.message,
+        stack: error.stack
+      } : undefined
+    });
   }
 };
 

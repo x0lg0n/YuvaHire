@@ -21,6 +21,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Upload } from "lucide-react"
+import { handleFormError } from "@/lib/utils"
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -35,20 +36,35 @@ export default function SettingsPage() {  const { user, login } = useAuth()
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: user?.username || "",
+    defaultValues: {      username: user?.username || "",
       avatar_url: user?.avatar_url || "",
     },
   })
+  
   const onSubmit = async (values) => {
     setError("")
+    setSuccessMessage("")
     setIsLoading(true)
     try {
-      const { data } = await updateUserProfile(values)
-      await login({ token: localStorage.getItem("token"), user: data.user })
+      // Check network connectivity before attempting to update profile
+      try {
+        await fetch('/api/health', { 
+          method: 'HEAD',
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+          timeout: 3000
+        });
+      } catch (connErr) {
+        console.warn('Health check failed:', connErr);
+        // Continue anyway, the main request might still work
+      }
+      
+      const response = await updateUserProfile(values)
+      await login({ token: localStorage.getItem("token"), user: response.user })
       setSuccessMessage("Profile updated successfully!")
     } catch (err) {
-      setError(err.message || "Failed to update profile")
+      // Use our enhanced error handler
+      handleFormError(err, setError);
     } finally {
       setIsLoading(false)
     }

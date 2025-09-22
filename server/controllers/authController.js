@@ -72,21 +72,33 @@ const login = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
+      return res.status(400).json({ 
+        message: 'Username and password are required',
+        details: { 
+          usernameProvided: !!username,
+          passwordProvided: !!password
+        }
+      });
     }
 
     // Find user
     const user = await User.findOne({ username });
     if (!user) {
       console.log('User not found:', username);
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ 
+        message: 'Invalid credentials',
+        details: { reason: 'user_not_found' }
+      });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log('Invalid password for user:', username);
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ 
+        message: 'Invalid credentials',
+        details: { reason: 'invalid_password' }
+      });
     }
 
     // Generate JWT token
@@ -114,7 +126,14 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: error.message || 'Server error during login' });
+    res.status(500).json({ 
+      message: error.message || 'Server error during login',
+      details: {
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+        name: error.name,
+        code: error.code
+      }
+    });
   }
 };
 

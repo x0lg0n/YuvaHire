@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { AuthProvider } from "@/lib/auth-context";
+import ErrorBoundary from "@/components/error-boundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,12 +28,14 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <div className="min-h-screen bg-background">
-              <Navbar />
-              <main className="container mx-auto py-4 px-4">
-                {children}
-              </main>
-            </div>
+            <ErrorBoundary>
+              <div className="min-h-screen bg-background">
+                <Navbar />
+                <main className="container mx-auto py-4 px-4">
+                  {children}
+                </main>
+              </div>
+            </ErrorBoundary>
           </ThemeProvider>
         </AuthProvider>
       </body>

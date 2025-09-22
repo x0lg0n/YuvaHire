@@ -14,34 +14,56 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { applyToJob } from "@/lib/api"
 import { useState } from "react"
+import ErrorBoundary from "./error-boundary"
 
-export function JobCard({ job, onApply, hasApplied }) {
+function JobCardContent({ job, onApply, hasApplied }) {
   const { user } = useAuth()
   const [applying, setApplying] = useState(false)
   const [error, setError] = useState("")
+  
   const handleApply = async () => {
     try {
       setApplying(true);
       setError("");
-      await applyToJob({ jobId: job._id });
+      
+      console.log('Applying to job:', { jobId: job._id, user: user?.id });
+      
+      const response = await applyToJob({ jobId: job._id });
+      console.log('Application successful:', response);
+      
       onApply && onApply(job._id);
     } catch (err) {
       console.error('Error applying to job:', err);
-      setError(err.response?.data?.message || "Failed to apply");
+      
+      // Enhanced error handling with more specific messages
+      if (err.response?.status === 400) {
+        setError(err.response.data?.message || "Invalid application data");
+      } else if (err.response?.status === 401) {
+        setError("Your session has expired. Please log in again.");
+      } else if (err.response?.status === 409) {
+        setError("You have already applied to this job");
+      } else if (err.message?.includes('network') || err.message?.includes('connect')) {
+        setError("Network error. Please check your connection and try again.");
+      } else if (err.code === 'ECONNABORTED') {
+        setError("Request timed out. Please try again.");
+      } else {
+        setError(err.response?.data?.message || "Failed to apply. Please try again.");
+      }
     } finally {
       setApplying(false);
     }
   }
 
   return (
-    <Card>
+    <Card data-job-id={job._id}>
       <CardHeader>
-        <CardTitle className="flex justify-between items-start">            <div>
-              <h3 className="text-xl font-semibold">{job.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Posted by {job.college_name}
-              </p>
-            </div>
+        <CardTitle className="flex justify-between items-start">
+          <div>
+            <h3 className="text-xl font-semibold">{job.title}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Posted by {job.college_name}
+            </p>
+          </div>
           <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
             {job.type}
           </span>
@@ -66,7 +88,8 @@ export function JobCard({ job, onApply, hasApplied }) {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{job.title}</DialogTitle>              <DialogDescription>
+              <DialogTitle>{job.title}</DialogTitle>
+              <DialogDescription>
                 Posted by {job.college_name}
               </DialogDescription>
             </DialogHeader>
@@ -137,5 +160,13 @@ export function JobCard({ job, onApply, hasApplied }) {
         </div>
       )}
     </Card>
+  )
+}
+
+export function JobCard({ job, onApply, hasApplied }) {
+  return (
+    <ErrorBoundary>
+      <JobCardContent job={job} onApply={onApply} hasApplied={hasApplied} />
+    </ErrorBoundary>
   )
 }

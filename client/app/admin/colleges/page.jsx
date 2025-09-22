@@ -36,6 +36,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { PlusCircle, Edit, Trash2 } from "lucide-react"
+import { handleFormError } from "@/lib/utils"
 
 const formSchema = z.object({
   name: z.string().min(3, "College name must be at least 3 characters"),
@@ -63,7 +64,7 @@ export default function AdminCollegesPage() {
       try {
         setLoading(true)
         const response = await getAllColleges()
-        setColleges(response.data.colleges)
+        setColleges(response.colleges)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -86,9 +87,24 @@ export default function AdminCollegesPage() {
       })
     }
   }, [selectedCollege, form])
-
   const onSubmit = async (values) => {
     try {
+      setError("");
+      setIsLoading(true);
+      
+      // Check network connectivity before attempting to update college data
+      try {
+        await fetch('/api/health', { 
+          method: 'HEAD',
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+          timeout: 3000
+        });
+      } catch (connErr) {
+        console.warn('Health check failed:', connErr);
+        // Continue anyway, the main request might still work
+      }
+      
       if (selectedCollege) {
         await updateCollege(selectedCollege._id, values)
         const updatedColleges = colleges.map(college => 
@@ -99,7 +115,7 @@ export default function AdminCollegesPage() {
         setColleges(updatedColleges)
       } else {
         const response = await createCollege(values)
-        setColleges([...colleges, response.data.college])
+        setColleges([...colleges, response.college])
       }
       setIsDialogOpen(false)
       setSelectedCollege(null)

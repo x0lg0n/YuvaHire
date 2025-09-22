@@ -24,10 +24,15 @@ export function Navbar() {
     router.push("/login")
   }
 
+  const getLogoLink = () => {
+    if (!user) return "/"
+    return user.role === "student" ? "/student/home" : "/admin/jobs"
+  }
+
   return (
     <nav className="border-b">
       <div className="flex h-16 items-center px-4 mx-auto max-w-7xl">
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href={getLogoLink()} className="flex items-center space-x-2">
           <span className="text-xl font-bold">YuvaHire</span>
         </Link>
         

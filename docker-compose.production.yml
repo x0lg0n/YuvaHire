@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - redis
+    networks:
+      - yuvahire-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://api:5000/api
+    depends_on:
+      - api
+    networks:
+      - yuvahire-network
+    restart: unless-stopped
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - yuvahire-network
+    restart: unless-stopped
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - yuvahire-network
+    restart: unless-stopped
+
+  # MongoDB (for development - use cloud in production)
+  mongodb:
+    image: mongo:6
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - yuvahire-network
+    restart: unless-stopped
+    profiles:
+      - development
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  yuvahire-network:
+    driver: bridge

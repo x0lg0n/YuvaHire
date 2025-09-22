@@ -1,152 +1,219 @@
-# YuvaHire
+# YuvaHire - College Job Portal
 
-<div align="center">
-  <img src="client/public/globe.svg" alt="YuvaHire Logo" width="120" />
-  
-  ### Modern College Job Portal
-  
-  [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](package.json)
-  [![MongoDB](https://img.shields.io/badge/MongoDB-%3E%3D5.0-green)](server/README.md)
-</div>
+A modern, full-stack job portal specifically designed for college students and administrators. Built with Next.js, Node.js, and MongoDB.
 
----
+## 🚀 Features
 
-YuvaHire is a production-ready job portal platform designed to revolutionize how colleges connect their students with employment opportunities. Built with modern technologies and best practices, it provides a seamless experience for both students and college administrators.
+- **Student Features**: Browse jobs, apply to positions, track applications
+- **College Admin Features**: Post jobs, manage applications, view analytics
+- **Authentication**: Secure JWT-based authentication with role-based access
+- **Real-time Updates**: Live application status updates
+- **Responsive Design**: Mobile-first approach with modern UI/UX
 
-## ✨ Key Features
-
-### For Students
-
-* Smart Job Discovery with AI-powered recommendations
-* One-click application process with profile management
-* Real-time application status tracking
-* Personalized dashboard with job matches
-* Advanced search with multiple filters
-
-### For College Administrators
-
-* Efficient job posting and management system
-* Comprehensive application tracking dashboard
-* Advanced analytics and reporting
-* Automated candidate communication
-* Multi-format job listing support
-
-## 🚀 Technology Stack
+## 🛠️ Tech Stack
 
 ### Frontend
-
-* Next.js 15 with React 19
-* TailwindCSS with custom theming
-* React Context for state management
-* React Hook Form with Zod validation
-* Radix UI primitives
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: React Context API
+- **Forms**: React Hook Form with Zod validation
+- **HTTP Client**: Axios with interceptors
 
 ### Backend
+- **Runtime**: Node.js with Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT tokens with bcrypt
+- **File Upload**: Cloudinary integration
+- **Validation**: Joi schema validation
 
-* Node.js with Express
-* MongoDB with Mongoose ODM
-* JWT authentication
-* OpenAPI/Swagger documentation
-* Enterprise-grade security
+## 📋 Prerequisites
 
-## 📦 Quick Start
+- Node.js 18+ 
+- MongoDB 6+
+- pnpm (recommended) or npm
 
-### Prerequisites
+## 🚀 Quick Start
 
-* Node.js (>= 18.0.0)
-* MongoDB (>= 5.0)
-* pnpm package manager
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/yuva-hire.git
+cd yuva-hire
+```
 
-### Development Setup
+### 2. Install Dependencies
+```bash
+# Install server dependencies
+cd server
+pnpm install
 
-1. Clone the repository
+# Install client dependencies
+cd ../client
+pnpm install
+```
 
-   ```bash
-   git clone https://github.com/yourusername/yuvahire.git
-   cd yuvahire
-   ```
+### 3. Environment Setup
 
-2. Install dependencies
+#### Server Environment (.env)
+```bash
+cd server
+cp .env.example .env
+```
 
-   ```bash
-   # Frontend
-   cd client
-   pnpm install
+Configure the following variables:
+```env
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/yuva-hire
+JWT_SECRET=your-super-secret-jwt-key
+CLOUDINARY_CLOUD_NAME=your-cloudinary-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-secret
+```
 
-   # Backend
-   cd ../server
-   pnpm install
-   ```
+#### Client Environment (.env.local)
+```bash
+cd client
+cp .env.example .env.local
+```
 
-3. Configure environment
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+```
 
-   ```bash
-   # Frontend (.env.local)
-   NEXT_PUBLIC_API_URL=http://localhost:5000/api
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
+### 4. Start Development Servers
 
-   # Backend (.env)
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/yuvahire
-   JWT_SECRET=your_secure_secret
-   NODE_ENV=development
-   ```
+#### Terminal 1 - Backend
+```bash
+cd server
+pnpm dev
+```
 
-4. Start development servers
+#### Terminal 2 - Frontend
+```bash
+cd client
+pnpm dev
+```
 
-   ```bash
-   # Terminal 1 (Frontend)
-   cd client
-   pnpm dev
+### 5. Access the Application
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000/api
 
-   # Terminal 2 (Backend)
-   cd server
-   pnpm dev
-   ```
+## 📚 API Documentation
 
-## 🔍 Documentation
+### Authentication Endpoints
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
 
-* [Frontend Documentation](client/README.md)
-* [Backend Documentation](server/README.md)
-* [Contributing Guide](CONTRIBUTING.md)
-* [API Documentation](server/README.md#api-routes)
+### Job Endpoints
+- `GET /api/jobs/my-college` - Get jobs for user's college
+- `POST /api/jobs` - Create new job (Admin only)
+- `GET /api/jobs/my-posted` - Get posted jobs (Admin only)
 
-## 🔐 Security Features
+### Application Endpoints
+- `POST /api/applications` - Apply to a job
+- `GET /api/applications/my-applications` - Get user's applications
+- `GET /api/applications/job/:id` - Get applications for a job (Admin only)
 
-* JWT-based authentication
-* Role-based access control
-* Rate limiting and CORS
-* Input validation
-* XSS protection
-* Security headers
+### College Endpoints
+- `GET /api/colleges` - Get all colleges
+- `POST /api/colleges` - Create college (Super Admin only)
 
-## 📈 Roadmap
+## 🏗️ Project Structure
 
-* AI-powered job matching
-* Resume parsing and analysis
-* Interview scheduling system
-* Mobile applications
-* Analytics dashboard
-* Integration with job boards
+```
+yuva-hire/
+├── client/                 # Next.js frontend
+│   ├── app/               # App Router pages
+│   ├── components/        # Reusable UI components
+│   ├── lib/              # Utilities and API functions
+│   └── public/           # Static assets
+├── server/                # Node.js backend
+│   ├── controllers/       # Route controllers
+│   ├── models/           # Mongoose models
+│   ├── routes/           # API routes
+│   ├── middlewares/      # Custom middlewares
+│   └── config/           # Configuration files
+└── docs/                 # Documentation
+```
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd server
+pnpm test
+```
+
+### Frontend Tests
+```bash
+cd client
+pnpm test
+```
+
+### E2E Tests
+```bash
+pnpm test:e2e
+```
+
+## 🚀 Deployment
+
+### Production Build
+```bash
+# Build frontend
+cd client
+pnpm build
+
+# Start production server
+cd server
+pnpm start
+```
+
+### Docker Deployment
+```bash
+docker-compose up -d
+```
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## 📄 License
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 💬 Support
+## 🐛 Bug Reports
 
-* [GitHub Issues](https://github.com/yourusername/yuvahire/issues)
-* [Documentation](https://yuvahire.com/docs)
-* [Community Discord](https://discord.gg/yuvahire)
+Please use the [GitHub Issues](https://github.com/yourusername/yuva-hire/issues) page to report bugs.
+
+## 📞 Support
+
+- **Email**: support@yuvahire.com
+- **Discord**: [Join our community](https://discord.gg/yuvahire)
+- **Documentation**: [docs.yuvahire.com](https://docs.yuvahire.com)
+
+## 🙏 Acknowledgments
+
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful UI components
+- [Next.js](https://nextjs.org/) for the amazing React framework
+- [MongoDB](https://mongodb.com/) for the database
+- All our contributors and users
+
+## 📊 Project Status
+
+![GitHub stars](https://img.shields.io/github/stars/yourusername/yuva-hire)
+![GitHub forks](https://img.shields.io/github/forks/yourusername/yuva-hire)
+![GitHub issues](https://img.shields.io/github/issues/yourusername/yuva-hire)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/yuva-hire)
+![GitHub license](https://img.shields.io/github/license/yourusername/yuva-hire)
 
 ---
 
-<div align="center">
-Made with ❤️ for the student community
-</div>
+Made with ❤️ by the YuvaHire Team
